@@ -983,7 +983,8 @@ clean::
 
 otherlibs_all := bigarray dynlink graph raw_spacetime_lib \
   str systhreads threads unix win32graph win32unix
-subdirs := asmrun byterun debugger lex ocamldoc ocamltest stdlib tools \
+subdirs := asmrun byterun cmm_of_wasm debugger lex ocamldoc \
+  ocamltest stdlib tools \
   $(addprefix otherlibs/, $(otherlibs_all)) \
   ocamldoc/stdlib_non_prefixed
 
@@ -1112,6 +1113,13 @@ ocamldebugger: ocamlc ocamlyacc ocamllex otherlibraries
 
 partialclean::
 	$(MAKE) -C debugger clean
+
+.PHONY: cmm_of_wasm
+cmm_of_wasm: ocamlc ocamlyacc ocamllex otherlibraries
+	$(MAKE) -C cmm_of_wasm all
+
+partialclean::
+	$(MAKE) -C cmm_of_wasm clean
 
 # Check that the stack limit is reasonable (Unix-only)
 .PHONY: checkstack

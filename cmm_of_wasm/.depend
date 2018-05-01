@@ -1,0 +1,2 @@
+main.cmo : wasm/ast.cmo
+main.cmx : wasm/ast.cmx
