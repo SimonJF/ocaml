@@ -1,2 +1,5 @@
-main.cmo : wasm/ast.cmo
-main.cmx : wasm/ast.cmx
+compile.cmo : ../asmcomp/cmm.cmi compile.cmi
+compile.cmx : ../asmcomp/cmm.cmx compile.cmi
+compile.cmi : ../asmcomp/cmm.cmi
+main.cmo : ../asmcomp/cmm.cmi
+main.cmx : ../asmcomp/cmm.cmx

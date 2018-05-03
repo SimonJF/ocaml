@@ -1,6 +1,5 @@
-module Types = Wasm_types 
+open Wasm_types
 
-open Types
 
 (* Values and operators *)
 

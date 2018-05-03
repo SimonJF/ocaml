@@ -3,7 +3,6 @@
  * using 64-bit floats, as described in the paper
  * "When is double rounding innocuous?" by Samuel A. Figueroa.
  *)
-
 include Float.Make
   (struct
     include Int32

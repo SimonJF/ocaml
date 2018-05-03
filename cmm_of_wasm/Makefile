@@ -21,7 +21,7 @@ CAMLRUN ?= ../boot/ocamlrun
 CAMLYACC ?= ../boot/ocamlyacc
 
 CAMLC=$(CAMLRUN) ../ocamlc -nostdlib -I ../stdlib
-COMPFLAGS=$(INCLUDES) -absname -w +a-4-9-41-42-44-45-48 -warn-error A \
+COMPFLAGS=$(INCLUDES) -absname -w +a-4-9-27-41-42-44-45-48 -warn-error A \
           -safe-string -strict-sequence -strict-formats
 LINKFLAGS=-linkall -I $(UNIXDIR)
 YACCFLAGS=
@@ -33,6 +33,18 @@ INCLUDES=\
   -I ../asmcomp \
   -I ../utils \
   -I wasm \
+  -I wasm/text \
+  -I wasm/exec \
+  -I wasm/runtime \
+  -I wasm/script \
+  -I wasm/util \
+  -I wasm/host \
+  -I wasm/binary \
+  -I wasm/text \
+  -I wasm/main \
+  -I wasm/valid \
+  -I wasm/syntax \
+  -I utils \
   -I $(UNIXDIR)
 
 OTHEROBJS=\
@@ -60,59 +72,114 @@ OTHEROBJS=\
 	../bytecomp/opcodes.cmo ../driver/compdynlink.cmo \
 	../bytecomp/lambda.cmo \
 	../asmcomp/arch.cmo \
-	../asmcomp/cmm.cmo \
+	../asmcomp/cmm.cmo
 
+all: cmm_of_wasm$(EXE)
 
-#OTHEROBJS=\
-#  $(UNIXDIR)/unix.cma \
-#  ../utils/*.cmo \
-#  ../
-#  ../utils/config.cmo \
-#  ../utils/misc.cmo \
-#  ../utils/identifiable.cmo \
-#  ../utils/numbers.cmo \
-#  ../utils/arg_helper.cmo \
-#  ../utils/clflags.cmo \
-#  ../utils/consistbl.cmo \
-#  ../utils/build_path_prefix_map.cmo \
-#  ../parsing/location.cmo \
-#  ../parsing/longident.cmo \
-#  ../parsing/builtin_attributes.cmo \
-#  ../parsing/ast_helper.cmo \
-#  ../parsing/ast_mapper.cmo \
-#  ../typing/ident.cmo \
-#  ../typing/path.cmo \
-#  ../typing/btype.cmo \
-#  ../typing/datarepr.cmo \
-#  ../typing/subst.cmo \
-#  ../typing/predef.cmo \
-#  ../typing/cmi_format.cmo \
-#  ../typing/env.cmo \
-#  ../bytecomp/lambda.cmo \
-#  ../asmcomp/arch.cmo \
-#  ../asmcomp/cmm.cmo
+wasm/text/parser.mli wasm/text/parser.ml: wasm/text/parser.mly
+	$(CAMLYACC) $(YACCFLAGS) $<
 
-WASM=\
-	wasm/numeric_error.cmo \
-	wasm/lib.cmo \
-	wasm/float.cmo \
-	wasm/f32.cmo \
-	wasm/f64.cmo \
-	wasm/int.cmo \
-	wasm/i64.cmo \
-    wasm/i32.cmo \
-	wasm/utf8.cmo \
-	wasm/wasm_types.cmo \
-	wasm/values.cmo \
-	wasm/ast.cmo
+partialclean::
+	rm -f wasm/text/parser.mli wasm/text/parser.ml wasm/text/parser.output
 
+beforedepend:: wasm/text/parser.mli wasm/text/parser.ml
+
+wasm/text/lexer.ml: wasm/text/lexer.mll
+	$(CAMLLEX) $<
+
+partialclean::
+	rm -f wasm/text/lexer.ml
+
+beforedepend:: wasm/text/lexer.ml
+
+WASMPARSE=\
+	wasm/text/parser.cmi \
+	wasm/text/parser.cmo \
+	wasm/text/lexer.cmi \
+	wasm/text/lexer.cmo
+
+WASMBEFOREPARSE=\
+	wasm/main/flags.cmo \
+	wasm/util/lib.cmi \
+	wasm/util/lib.cmo \
+	wasm/util/sexpr.cmi \
+	wasm/util/sexpr.cmo \
+	wasm/util/source.cmi \
+	wasm/util/source.cmo \
+	wasm/util/error.cmo \
+	wasm/binary/utf8.cmi \
+	wasm/binary/utf8.cmo \
+	wasm/exec/numeric_error.cmo \
+	wasm/exec/int.cmo \
+	wasm/exec/float.cmo \
+	wasm/exec/i32.cmo \
+	wasm/exec/i64.cmo \
+	wasm/exec/f64.cmo \
+	wasm/exec/f32.cmo \
+	wasm/syntax/wasm_types.cmo \
+	wasm/syntax/values.cmo \
+	wasm/runtime/memory.cmi \
+	wasm/runtime/memory.cmo \
+	wasm/syntax/ast.cmo \
+	wasm/syntax/operators.cmo \
+	wasm/exec/i32_convert.cmi \
+	wasm/exec/i32_convert.cmo \
+	wasm/exec/f32_convert.cmi \
+	wasm/exec/f32_convert.cmo \
+	wasm/exec/i64_convert.cmi \
+	wasm/exec/i64_convert.cmo \
+	wasm/exec/f64_convert.cmi \
+	wasm/exec/f64_convert.cmo \
+	wasm/runtime/func.cmi \
+	wasm/runtime/func.cmo \
+	wasm/runtime/global.cmi \
+	wasm/runtime/global.cmo \
+	wasm/runtime/table.cmi \
+	wasm/runtime/table.cmo \
+	wasm/runtime/instance.cmo \
+	wasm/exec/eval_numeric.cmi \
+	wasm/exec/eval_numeric.cmo \
+	wasm/exec/eval.cmi \
+	wasm/exec/eval.cmo \
+	wasm/binary/encode.cmi \
+	wasm/binary/encode.cmo \
+	wasm/script/script.cmo \
+	wasm/script/import.cmi \
+	wasm/script/import.cmo
+
+WASMAFTERPARSE=\
+	wasm/text/parser.cmi \
+	wasm/text/parser.cmo \
+	wasm/text/lexer.cmi \
+	wasm/text/lexer.cmo \
+	wasm/text/parse.cmi \
+	wasm/text/parse.cmo\
+	wasm/binary/decode.cmi \
+	wasm/binary/decode.cmo \
+	wasm/text/arrange.cmi \
+	wasm/text/arrange.cmo \
+	wasm/text/print.cmi \
+	wasm/text/print.cmo \
+	wasm/valid/valid.cmi \
+	wasm/valid/valid.cmo \
+	wasm/script/run.cmi \
+	wasm/script/run.cmo \
+	wasm/script/js.cmi \
+	wasm/script/js.cmo \
+	wasm/host/env.cmo \
+	wasm/host/spectest.cmo
+
+#UTILS=\
+#	utils/source.cmi \
+#	utils/source.cmo \
+#	utils/lib.cmo \
+#	utils/error.cmo
 
 OBJS=\
 	main.cmo
 
-all: cmm_of_wasm$(EXE)
 
-cmm_of_wasm$(EXE): $(WASM) $(OBJS) $(OTHEROBJS)
+cmm_of_wasm$(EXE): $(WASMBEFOREPARSE) $(WASMPARSE) $(WASMAFTERPARSE) $(OBJS) $(OTHEROBJS)
 	$(CAMLC) $(LINKFLAGS) -o cmm_of_wasm$(EXE) -linkall $(OTHEROBJS) $(OBJS)
 
 install:
@@ -120,7 +187,8 @@ install:
 
 clean::
 	rm -f cmm_of_wasm$(EXE)
-	rm -f *.cmo *.cmi
+	rm -f wasm/*.cmo wasm/*.cmi
+	rm -f utils/*.cmo utils/*.cmi
 
 .SUFFIXES:
 .SUFFIXES: .ml .cmo .mli .cmi

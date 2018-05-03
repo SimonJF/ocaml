@@ -1,5 +1,3 @@
-[@@@ocaml.warning "-27"];;
-
 module Fun =
 struct
   let rec repeat n f x =
@@ -80,8 +78,8 @@ struct
   and index_where' p xs i =
     match xs with
     | [] -> None
-    | x::xs' when p x -> Some i
-    | x::xs' -> index_where' p xs' (i+1)
+    | x::_xs' when p x -> Some i
+    | _x::xs' -> index_where' p xs' (i+1)
 
   let index_of x = index_where ((=) x)
 
@@ -139,7 +137,7 @@ struct
   let blit a1 i1 a2 i2 n =
     Array.blit a1 (index_of_int32 i1) a2 (index_of_int32 i2) (index_of_int32 n)
 end
-(*
+
 module Bigarray =
 struct
   open Bigarray
@@ -161,7 +159,7 @@ struct
     let set a i x = Array1.set a (index_of_int64 i) x
     let sub a i n = Array1.sub a (index_of_int64 i) (index_of_int64 n)
   end
-end *)
+end
 
 module Option =
 struct

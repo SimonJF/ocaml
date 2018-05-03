@@ -16,12 +16,8 @@
  * These conventions mostly follow standard practice in language semantics.
  *)
 
-(* TODO: introduce symbol variable and use it instead! *)
+open Wasm_types
 
-
-module Types = Wasm_types
-
-open Types
 
 (* Operators *)
 
@@ -59,27 +55,20 @@ type testop = (I32Op.testop, I64Op.testop, F32Op.testop, F64Op.testop) Values.op
 type relop = (I32Op.relop, I64Op.relop, F32Op.relop, F64Op.relop) Values.op
 type cvtop = (I32Op.cvtop, I64Op.cvtop, F32Op.cvtop, F64Op.cvtop) Values.op
 
-type mem_size = Mem8 | Mem16 | Mem32
-type extension = SX | ZX
-
 type 'a memop =
-  {ty : value_type; align : int; offset : int32; sz : 'a option}
-type loadop = (mem_size * extension) memop
-type storeop = mem_size memop
+  {ty : value_type; align : int; offset : Memory.offset; sz : 'a option}
+type loadop = (Memory.mem_size * Memory.extension) memop
+type storeop = Memory.mem_size memop
 
 
 (* Expressions *)
 
-type var = int32
-type literal = Values.value
+type var = int32 Source.phrase
+type literal = Values.value Source.phrase
 type name = int list
 
-type call = {
-  index: var;
-  name: string;
-}
-
-type instr =
+type instr = instr' Source.phrase
+and instr' =
   | Unreachable                       (* trap unconditionally *)
   | Nop                               (* do nothing *)
   | Block of stack_type * instr list  (* execute in sequence *)
@@ -89,8 +78,7 @@ type instr =
   | BrIf of var                       (* conditional break *)
   | BrTable of var list * var         (* indexed break *)
   | Return                            (* break from function body *)
-  | Call of call                      (* call function *)
-  | Link of string                    (* used to link later on *)
+  | Call of var                       (* call function *)
   | CallIndirect of var               (* call function through table *)
   | Drop                              (* forget a value *)
   | Select                            (* branchless conditional *)
@@ -104,7 +92,6 @@ type instr =
   | CurrentMemory                     (* size of linear memory *)
   | GrowMemory                        (* grow linear memory *)
   | Const of literal                  (* constant *)
-  | DelayedConst of string            (* a constant that is resolved at a later point *)
   | Test of testop                    (* numeric test *)
   | Compare of relop                  (* numeric comparison *)
   | Unary of unop                     (* unary numeric operator *)
@@ -114,18 +101,18 @@ type instr =
 
 (* Globals & Functions *)
 
-type const = instr list
+type const = instr list Source.phrase
 
-type global =
+type global = global' Source.phrase
+and global' =
 {
-  name : string;
   gtype : global_type;
   value : const;
 }
 
-type func =
+type func = func' Source.phrase
+and func' =
 {
-  name: string;
   ftype : var;
   locals : value_type list;
   body : instr list;
@@ -134,17 +121,20 @@ type func =
 
 (* Tables & Memories *)
 
-type table =
+type table = table' Source.phrase
+and table' =
 {
   ttype : table_type;
 }
 
-type memory =
+type memory = memory' Source.phrase
+and memory' =
 {
   mtype : memory_type;
 }
 
-type 'data segment =
+type 'data segment = 'data segment' Source.phrase
+and 'data segment' =
 {
   index : var;
   offset : const;
@@ -157,70 +147,39 @@ type memory_segment = string segment
 
 (* Modules *)
 
-type type_ = func_type
+type type_ = func_type Source.phrase
 
-type export_desc =
+type export_desc = export_desc' Source.phrase
+and export_desc' =
   | FuncExport of var
   | TableExport of var
   | MemoryExport of var
   | GlobalExport of var
 
-type export =
+type export = export' Source.phrase
+and export' =
 {
   name : name;
   edesc : export_desc;
 }
 
-type import_desc =
+type import_desc = import_desc' Source.phrase
+and import_desc' =
   | FuncImport of var
   | TableImport of table_type
   | MemoryImport of memory_type
   | GlobalImport of global_type
 
-type import =
+type import = import' Source.phrase
+and import' =
 {
   module_name : name;
   item_name : name;
   idesc : import_desc;
 }
 
-type data_part_detail =
-| String of string
-| Int32 of int32
-| Nativeint of nativeint
-| Int16 of int
-| Int8 of int
-| Float32 of F32.t
-
-type data_part = {
-  name: string;
-  detail: data_part_detail list
-}
-
-type sym_info_function = {
-  index: var;
-  name: string; (* to length and bytes *)
-}
-
-type sym_info_data = {
-  name: string; (* to length and bytes *)
-  index: var;
-  offset: var;
-  size: var;
-}
-
-type sym_info_details =
-  | Function of sym_info_function
-  | Import of var
-  | Global of sym_info_function
-  | Data of sym_info_data
-
-type sym_info = {
-  flags: var;
-  details: sym_info_details;
-}
-
-type module_ =
+type module_ = module_' Source.phrase
+and module_' =
 {
   types : type_ list;
   globals : global list;
@@ -229,10 +188,9 @@ type module_ =
   funcs : func list;
   start : var option;
   elems : var list segment list;
-  data : data_part segment list;
+  data : string segment list;
   imports : import list;
   exports : export list;
-  symbols : sym_info list;
 }
 
 
@@ -250,38 +208,39 @@ let empty_module =
   data = [];
   imports = [];
   exports = [];
-  symbols = [];
 }
 
+open Source
+
 let func_type_for (m : module_) (x : var) : func_type =
-  (Lib.List32.nth m.types x)
+  (Lib.List32.nth m.it.types x.it).it
 
 let import_type (m : module_) (im : import) : extern_type =
-  let {idesc; _} = im in
-  match idesc with
+  let {idesc; _} = im.it in
+  match idesc.it with
   | FuncImport x -> ExternFuncType (func_type_for m x)
   | TableImport t -> ExternTableType t
   | MemoryImport t -> ExternMemoryType t
   | GlobalImport t -> ExternGlobalType t
 
 let export_type (m : module_) (ex : export) : extern_type =
-  let {edesc; _} = ex in
-  let its = List.map (import_type m) m.imports in
+  let {edesc; _} = ex.it in
+  let its = List.map (import_type m) m.it.imports in
   let open Lib.List32 in
-  match edesc with
+  match edesc.it with
   | FuncExport x ->
     let fts =
-      funcs its @ List.map (fun f -> func_type_for m f.ftype) m.funcs
-    in ExternFuncType (nth fts x)
+      funcs its @ List.map (fun f -> func_type_for m f.it.ftype) m.it.funcs
+    in ExternFuncType (nth fts x.it)
   | TableExport x ->
-    let tts = tables its @ List.map (fun t -> t.ttype) m.tables in
-    ExternTableType (nth tts x)
+    let tts = tables its @ List.map (fun t -> t.it.ttype) m.it.tables in
+    ExternTableType (nth tts x.it)
   | MemoryExport x ->
-    let mts = memories its @ List.map (fun m -> m.mtype) m.memories in
-    ExternMemoryType (nth mts x)
+    let mts = memories its @ List.map (fun m -> m.it.mtype) m.it.memories in
+    ExternMemoryType (nth mts x.it)
   | GlobalExport x ->
-    let gts = globals its @ List.map (fun g -> g.gtype) m.globals in
-    ExternGlobalType (nth gts x)
+    let gts = globals its @ List.map (fun g -> g.it.gtype) m.it.globals in
+    ExternGlobalType (nth gts x.it)
 
 let string_of_name n =
   let b = Buffer.create 16 in
