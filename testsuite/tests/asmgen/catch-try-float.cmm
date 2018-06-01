@@ -1,0 +1,12 @@
+(* TEST
+files = "main.c"
+arguments = "-DFLOAT_FLOAT -DFUN=catch_exit_float main.c"
+* asmgen
+*)
+
+(function "catch_exit_float" (b:float)
+  (+ 33.0
+  (catch
+    (try (exit lbl 12.0)
+     with var 456.0)
+   with (lbl x:float) (+ x 789.0))))

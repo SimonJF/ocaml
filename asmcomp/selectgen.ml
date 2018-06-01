@@ -151,6 +151,11 @@ let join opt_r1 seq1 opt_r2 seq2 =
           r.(i) <- r2.(i);
           seq1#insert_move r1.(i) r2.(i)
         end else begin
+          Printcmm.machtype_component (Format.str_formatter) r1.(i).typ;
+          let comp1_str = Format.flush_str_formatter () in
+          Printcmm.machtype_component (Format.str_formatter) r2.(i).typ;
+          let comp2_str = Format.flush_str_formatter () in
+          Printf.printf "lub_component %s %s\n%!" comp1_str comp2_str;
           let typ = Cmm.lub_component r1.(i).typ r2.(i).typ in
           r.(i) <- Reg.create typ;
           seq1#insert_move r1.(i) r.(i);
@@ -172,7 +177,13 @@ let join_array rs =
       | None -> some_res := Some (r, Array.map (fun r -> r.typ) r)
       | Some (r', types) ->
         let types =
-          Array.map2 (fun r typ -> Cmm.lub_component r.typ typ) r types
+          Array.map2 (fun r typ ->
+           Printcmm.machtype_component (Format.str_formatter) r.typ;
+            let comp1_str = Format.flush_str_formatter () in
+            Printcmm.machtype_component (Format.str_formatter) typ;
+            let comp2_str = Format.flush_str_formatter () in
+            Printf.printf "lub_component %s %s\n%!" comp1_str comp2_str;
+            Cmm.lub_component r.typ typ) r types
         in
         some_res := Some (r', types)
   done;
@@ -793,9 +804,7 @@ method emit_expr (env:environment) exp =
         List.map (fun (nfail, ids, e2) ->
             let rs =
               List.map
-                (* CR-someday mshinwell: consider how we can do better than
-                   [typ_val] when appropriate. *)
-                (fun id -> let r = self#regs_for typ_val in name_regs id r; r)
+                (fun (id, typ) -> let r = self#regs_for typ in name_regs id r; r)
                 ids in
             (nfail, ids, rs, e2))
           handlers
@@ -812,7 +821,7 @@ method emit_expr (env:environment) exp =
       let translate_one_handler (nfail, ids, rs, e2) =
         assert(List.length ids = List.length rs);
         let new_env =
-          List.fold_left (fun env (id, r) -> env_add id r env)
+          List.fold_left (fun env ((id, _typ), r) -> env_add id r env)
             env (List.combine ids rs)
         in
         let (r, s) = self#emit_sequence new_env e2 in
@@ -832,14 +841,13 @@ method emit_expr (env:environment) exp =
           let dest_args =
             try env_find_static_exception nfail env
             with Not_found ->
-              fatal_error ("Selection.emit_expr: unboun label "^
+              fatal_error ("Selection.emit_expr: unbound label "^
                            string_of_int nfail)
           in
           (* Intermediate registers to handle cases where some
              registers from src are present in dest *)
           let tmp_regs = Reg.createv_like src in
-          (* Ccatch registers are created with type Val. They must not
-             contain out of heap pointers *)
+          (* Ccatch registers must not contain out of heap pointers *)
           Array.iter (fun reg -> assert(reg.typ <> Addr)) src;
           self#insert_moves src tmp_regs ;
           self#insert_moves tmp_regs (Array.concat dest_args) ;
@@ -1127,7 +1135,7 @@ method emit_tail (env:environment) exp =
         List.map (fun (nfail, ids, e2) ->
             let rs =
               List.map
-                (fun id -> let r = self#regs_for typ_val in name_regs id r; r)
+                (fun (id, typ) -> let r = self#regs_for typ in name_regs id r; r)
                 ids in
             (nfail, ids, rs, e2))
           handlers in
@@ -1140,7 +1148,7 @@ method emit_tail (env:environment) exp =
         assert(List.length ids = List.length rs);
         let new_env =
           List.fold_left
-            (fun env (id,r) -> env_add id r env)
+            (fun env ((id, _typ),r) -> env_add id r env)
             env (List.combine ids rs) in
         nfail, self#emit_tail_sequence new_env e2
       in
