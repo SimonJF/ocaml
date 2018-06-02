@@ -151,11 +151,6 @@ let join opt_r1 seq1 opt_r2 seq2 =
           r.(i) <- r2.(i);
           seq1#insert_move r1.(i) r2.(i)
         end else begin
-          Printcmm.machtype_component (Format.str_formatter) r1.(i).typ;
-          let comp1_str = Format.flush_str_formatter () in
-          Printcmm.machtype_component (Format.str_formatter) r2.(i).typ;
-          let comp2_str = Format.flush_str_formatter () in
-          Printf.printf "lub_component %s %s\n%!" comp1_str comp2_str;
           let typ = Cmm.lub_component r1.(i).typ r2.(i).typ in
           r.(i) <- Reg.create typ;
           seq1#insert_move r1.(i) r.(i);
@@ -177,13 +172,7 @@ let join_array rs =
       | None -> some_res := Some (r, Array.map (fun r -> r.typ) r)
       | Some (r', types) ->
         let types =
-          Array.map2 (fun r typ ->
-           Printcmm.machtype_component (Format.str_formatter) r.typ;
-            let comp1_str = Format.flush_str_formatter () in
-            Printcmm.machtype_component (Format.str_formatter) typ;
-            let comp2_str = Format.flush_str_formatter () in
-            Printf.printf "lub_component %s %s\n%!" comp1_str comp2_str;
-            Cmm.lub_component r.typ typ) r types
+          Array.map2 (fun r typ -> Cmm.lub_component r.typ typ) r types
         in
         some_res := Some (r', types)
   done;
