@@ -5,6 +5,7 @@ catch-float.cmm
 catch-try-float.cmm
 checkbound.cmm
 even-odd-spill.cmm
+even-odd-spill-float.cmm
 even-odd.cmm
 fib.cmm
 integr.cmm

@@ -84,7 +84,9 @@ int main(int argc, char **argv)
 #ifdef FLOAT_CATCH
   { extern double FUN(double);
     extern double call_gen_code(double (*)(double), double);
-    FLOATTEST(call_gen_code(FUN, 1.0), 1110.0)
+    double result = call_gen_code(FUN, 1.0);
+    FLOATTEST(result, 1110.0)
+    printf("%f\n", result);
   }
 #endif
 #ifdef SORT
