@@ -93,6 +93,7 @@ let operation d = function
   | Cmuli -> "*"
   | Cmulhi -> "*h"
   | Cdivi -> "/"
+  | Cdiviu -> "/u"
   | Cmodi -> "mod"
   | Cand -> "and"
   | Cor -> "or"

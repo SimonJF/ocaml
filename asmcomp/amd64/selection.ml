@@ -108,7 +108,7 @@ let pseudoregs_for_operation op arg res =
   (* For div and mod, first arg must be in rax, rdx is clobbered,
      and result is in rax or rdx respectively.
      Keep it simple, just force second argument in rcx. *)
-  | Iintop(Idiv) ->
+  | Iintop(Idiv | Idivu) ->
       ([| rax; rcx |], [| rax |])
   | Iintop(Imod) ->
       ([| rax; rcx |], [| rdx |])

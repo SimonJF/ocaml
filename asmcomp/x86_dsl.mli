@@ -37,6 +37,7 @@ val ah: arg
 val cl: arg
 val ax: arg
 val rax: arg
+val rdx: arg
 val r10: arg
 val r11: arg
 val r13: arg
@@ -114,6 +115,7 @@ module I : sig
   val cvtss2sd: arg -> arg -> unit
   val cvttsd2si: arg -> arg -> unit
   val dec: arg -> unit
+  val div: arg -> unit
   val divsd: arg -> arg -> unit
   val fabs: unit -> unit
   val fadd: arg -> unit

@@ -126,7 +126,7 @@ let pseudoregs_for_operation op arg res =
   (* For div and mod, first arg must be in eax, edx is clobbered,
      and result is in eax or edx respectively.
      Keep it simple, just force second argument in ecx. *)
-  | Iintop(Idiv) ->
+  | Iintop(Idiv | Idivu) ->
       ([| eax; ecx |], [| eax |], true)
   | Iintop(Imod) ->
       ([| eax; ecx |], [| edx |], true)

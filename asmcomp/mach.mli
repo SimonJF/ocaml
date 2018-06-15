@@ -26,7 +26,7 @@ type integer_comparison =
   | Iunsigned of Cmm.integer_comparison
 
 type integer_operation =
-    Iadd | Isub | Imul | Imulh | Idiv | Imod
+    Iadd | Isub | Imul | Imulh | Idiv | Idivu | Imod
   | Iand | Ior | Ixor | Ilsl | Ilsr | Iasr
   | Icomp of integer_comparison
   | Icheckbound of { label_after_error : label option;

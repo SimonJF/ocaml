@@ -187,7 +187,7 @@ let destroyed_at_oper = function
     Iop(Icall_ind _ | Icall_imm _ | Iextcall { alloc = true; _}) ->
     all_phys_regs
   | Iop(Iextcall { alloc = false; }) -> destroyed_at_c_call
-  | Iop(Iintop(Idiv | Imod)) -> [| eax; edx |]
+  | Iop(Iintop(Idiv | Idivu | Imod)) -> [| eax; edx |]
   | Iop(Ialloc _ | Iintop Imulh) -> [| eax |]
   | Iop(Iintop(Icomp _) | Iintop_imm(Icomp _, _)) -> [| eax |]
   | Iop(Iintoffloat) -> [| eax |]

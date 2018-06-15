@@ -80,6 +80,7 @@ let intop = function
   | Imul -> " * "
   | Imulh -> " *h "
   | Idiv -> " div "
+  | Idivu -> " divu "
   | Imod -> " mod "
   | Iand -> " & "
   | Ior ->  " | "
