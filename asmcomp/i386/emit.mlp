@@ -725,6 +725,7 @@ let emit_instr fallthrough i =
       I.add (int 8) esp;
       cfi_adjust_cfa_offset (-8);
       stack_offset := !stack_offset + 8
+  | Lop(If32off64 | If64off32) -> failwith "unimplemented"
   | Lop(Ispecific(Ilea addr)) ->
       I.lea (addressing addr DWORD i 0) (reg i.res.(0))
   | Lop(Ispecific(Istore_int(n, addr, _))) ->

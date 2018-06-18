@@ -44,6 +44,8 @@ open Mach
      Inegf...Idivf              R       R       S
      Ifloatofint                R       S
      Iintoffloat                R       S
+     If32off64                  R       S
+     If64off32                  R       S
      Ispecific(Ilea)            R       R       R
      Ispecific(Ifloatarithmem)  R       R       R
 
@@ -86,7 +88,7 @@ method! reload_operation op arg res =
       if stackp arg.(0)
       then (let r = self#makereg arg.(0) in ([|r; arg.(1)|], [|r|]))
       else (arg, res)
-  | Ifloatofint | Iintoffloat ->
+  | Ifloatofint | Iintoffloat | If32off64 | If64off32 ->
       (* Result must be in register, but argument can be on stack *)
       (arg, (if stackp res.(0) then [| self#makereg res.(0) |] else res))
   | Iconst_int n ->

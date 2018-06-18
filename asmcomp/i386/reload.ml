@@ -61,7 +61,7 @@ method! reload_operation op arg res =
       then let r = self#makereg arg.(0) in ([|r|], [|r|])
       else (arg, res)
   | Iintop(Imulh | Ilsl | Ilsr | Iasr) | Iintop_imm(_, _)
-  | Ifloatofint | Iintoffloat | Ispecific(Ipush) ->
+  | Ifloatofint | Iintoffloat | If32off64 | If64off32 | Ispecific(Ipush) ->
       (* The argument(s) can be either in register or on stack *)
       (* Note: Imulh: arg(0 and res(0) already forced in regs
                Ilsl, Ilsr, Iasr: arg(1) already forced in regs *)

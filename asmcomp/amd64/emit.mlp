@@ -729,6 +729,10 @@ let emit_instr fallthrough i =
       I.cvtsi2sd  (arg i 0)  (res i 0)
   | Lop(Iintoffloat) ->
       I.cvttsd2si (arg i 0) (res i 0)
+  | Lop(If32off64) ->
+      I.cvtsd2ss (arg i 0) (res i 0)
+  | Lop(If64off32) ->
+      I.cvtss2sd (arg i 0) (res i 0)
   | Lop(Ispecific(Ilea addr)) ->
       I.lea (addressing addr NONE i 0) (res i 0)
   | Lop(Ispecific(Istore_int(n, addr, _))) ->

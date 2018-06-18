@@ -66,6 +66,7 @@ let oper_result_type = function
   | Cnegf | Cabsf | Caddf | Csubf | Cmulf | Cdivf -> typ_float
   | Cfloatofint -> typ_float
   | Cintoffloat -> typ_int
+  | Cf32off64 | Cf64off32 -> typ_float
   | Craise _ -> typ_void
   | Ccheckbound -> typ_void
 
@@ -299,7 +300,7 @@ method is_simple_expr = function
       | Cload _ | Caddi | Csubi | Cmuli | Cmulhi | Cdivi | Cdiviu | Cmodi
       | Cand | Cor | Cxor | Clsl | Clsr | Casr | Ccmpi _ | Caddv | Cadda
       | Ccmpa _ | Cnegf | Cabsf | Caddf | Csubf | Cmulf | Cdivf | Cfloatofint
-      | Cintoffloat | Ccmpf _ | Ccheckbound ->
+      | Cintoffloat | Cf32off64 | Cf64off32 | Ccmpf _ | Ccheckbound ->
           List.for_all self#is_simple_expr args
       end
   | Cassign _ | Cifthenelse _ | Cswitch _ | Cloop _ | Ccatch _ | Cexit _
@@ -343,7 +344,7 @@ method effects_of exp =
       | Caddi | Csubi | Cmuli | Cmulhi | Cdivi | Cdiviu | Cmodi | Cand | Cor
       | Cxor | Clsl | Clsr | Casr | Ccmpi _ | Caddv | Cadda | Ccmpa _ | Cnegf
       | Cabsf | Caddf | Csubf | Cmulf | Cdivf | Cfloatofint | Cintoffloat
-      | Ccmpf _ -> EC.none
+      | Cf32off64 | Cf64off32 | Ccmpf _ -> EC.none
     in
     EC.join from_op (EC.join_list_map args self#effects_of)
   | Cassign _ | Cswitch _ | Cloop _ | Ccatch _ | Cexit _ | Ctrywith _ ->
@@ -463,6 +464,8 @@ method select_operation op args _dbg =
   | (Cdivf, _) -> (Idivf, args)
   | (Cfloatofint, _) -> (Ifloatofint, args)
   | (Cintoffloat, _) -> (Iintoffloat, args)
+  | (Cf32off64, _) -> (If32off64, args)
+  | (Cf64off32, _) -> (If64off32, args)
   | (Ccheckbound, _) ->
     let extra_args = self#select_checkbound_extra_args () in
     let op = self#select_checkbound () in

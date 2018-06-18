@@ -145,6 +145,7 @@ and operation =
   | Cnegf | Cabsf
   | Caddf | Csubf | Cmulf | Cdivf
   | Cfloatofint | Cintoffloat
+  | Cf32off64 | Cf64off32
   | Ccmpf of float_comparison
   | Craise of raise_kind
   | Ccheckbound
