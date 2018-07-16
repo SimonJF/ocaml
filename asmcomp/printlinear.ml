@@ -28,7 +28,8 @@ let instr ppf i =
   | Lend -> ()
   | Lop op ->
       begin match op with
-      | Ialloc _ | Icall_ind _ | Icall_imm _ | Iextcall _ ->
+      | Ialloc _ | Icall_ind _ | Icall_imm _
+      | Iextcall_ind _ | Iextcall_imm _ ->
           fprintf ppf "@[<1>{%a}@]@," regsetaddr i.live
       | _ -> ()
       end;

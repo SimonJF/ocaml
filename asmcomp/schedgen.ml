@@ -152,7 +152,8 @@ method oper_in_basic_block = function
   | Icall_imm _ -> false
   | Itailcall_ind _ -> false
   | Itailcall_imm _ -> false
-  | Iextcall _ -> false
+  | Iextcall_ind _ -> false
+  | Iextcall_imm _ -> false
   | Istackoffset _ -> false
   | Ialloc _ -> false
   | _ -> true
@@ -375,8 +376,9 @@ method schedule_fundecl f =
     else begin
       let critical_outputs =
         match i.desc with
-          Lop(Icall_ind _ | Itailcall_ind _) -> [| i.arg.(0) |]
-        | Lop(Icall_imm _ | Itailcall_imm _ | Iextcall _) -> [||]
+          Lop(Icall_ind _ | Itailcall_ind _ | Iextcall_ind _) ->
+            [| i.arg.(0) |]
+        | Lop(Icall_imm _ | Itailcall_imm _ | Iextcall_imm _) -> [||]
         | Lreturn -> [||]
         | _ -> i.arg in
       List.iter (fun x -> ignore (longest_path critical_outputs x)) ready_queue;

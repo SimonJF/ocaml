@@ -50,6 +50,7 @@ let env_empty = {
 let oper_result_type = function
     Capply ty -> ty
   | Cextcall(_s, ty, _alloc, _) -> ty
+  | Cextcall_indirect (ty, _, _) -> ty
   | Cload (c, _) ->
       begin match c with
       | Word_val -> typ_val
@@ -295,7 +296,8 @@ method is_simple_expr = function
   | Cop(op, args, _) ->
       begin match op with
         (* The following may have side effects *)
-      | Capply _ | Cextcall _ | Calloc | Cstore _ | Craise _ -> false
+      | Capply _ | Cextcall _ | Cextcall_indirect _ | Calloc | Cstore _
+      | Craise _ -> false
         (* The remaining operations are simple if their args are *)
       | Cload _ | Caddi | Csubi | Cmuli | Cmulhi | Cdivi | Cdiviu | Cmodi
       | Cand | Cor | Cxor | Clsl | Clsr | Casr | Ccmpi _ | Caddv | Cadda
@@ -335,7 +337,7 @@ method effects_of exp =
   | Cop (op, args, _) ->
     let from_op =
       match op with
-      | Capply _ | Cextcall _ -> EC.arbitrary
+      | Capply _ | Cextcall _ | Cextcall_indirect _ -> EC.arbitrary
       | Calloc -> EC.none
       | Cstore _ -> EC.effect_only Effect.Arbitrary
       | Craise _ | Ccheckbound -> EC.effect_only Effect.Raise
@@ -374,7 +376,7 @@ method mark_tailcall = ()
 method mark_c_tailcall = ()
 
 method mark_instr = function
-  | Iop (Icall_ind _ | Icall_imm _ | Iextcall _) ->
+  | Iop (Icall_ind _ | Icall_imm _ | Iextcall_imm _ | Iextcall_ind _ ) ->
       self#mark_call
   | Iop (Itailcall_ind _ | Itailcall_imm _) ->
       self#mark_tailcall
@@ -419,7 +421,14 @@ method select_operation op args _dbg =
       | None -> Cmm.new_label ()
       | Some label_after -> label_after
     in
-    Iextcall { func; alloc; label_after; }, args
+    Iextcall_imm { func; alloc; label_after; }, args
+  | (Cextcall_indirect (_ty, alloc, label_after), _) ->
+    let label_after =
+      match label_after with
+      | None -> Cmm.new_label ()
+      | Some label_after -> label_after
+    in
+    Iextcall_ind { alloc; label_after; }, args
   | (Cload (chunk, _mut), [arg]) ->
       let (addr, eloc) = self#select_addressing chunk arg in
       (Iload(chunk, addr), [eloc])
@@ -731,7 +740,25 @@ method emit_expr (env:environment) exp =
               self#insert_debug (Iop new_op) dbg loc_arg loc_res;
               self#insert_move_results loc_res rd stack_ofs;
               Some rd
-          | Iextcall _ ->
+          | Iextcall_ind _ ->
+              let args = self#emit_tuple_not_flattened env args in
+              let args = List.tl args in
+              let arg_hard_regs, stack_ofs =
+                Proc.loc_external_arguments (Array.of_list args) in
+              let args = Array.concat args in
+              let arg_hard_regs = Array.concat (Array.to_list arg_hard_regs) in
+              self#insert_move_args args arg_hard_regs stack_ofs;
+              let spacetime_reg =
+                self#about_to_emit_call env (Iop new_op) [| |] in
+              let (loc_arg, stack_ofs) = self#emit_extcall_args env new_args in
+              self#maybe_emit_spacetime_move ~spacetime_reg;
+              let rd = self#regs_for ty in
+              let loc_res =
+                self#insert_op_debug new_op dbg
+                  loc_arg (Proc.loc_external_results rd) in
+              self#insert_move_results loc_res rd stack_ofs;
+              Some rd
+          | Iextcall_imm _ ->
               let spacetime_reg =
                 self#about_to_emit_call env (Iop new_op) [| |]
               in

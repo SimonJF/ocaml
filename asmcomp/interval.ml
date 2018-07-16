@@ -130,8 +130,9 @@ let build_intervals fd =
     update_interval_position_by_instr intervals i !pos;
     begin match i.desc with
       Iend -> ()
-    | Iop(Icall_ind _ | Icall_imm _ | Iextcall{alloc = true; _}
-          | Itailcall_ind _ | Itailcall_imm _) ->
+    | Iop(Icall_ind _ | Icall_imm _ | Iextcall_imm{alloc = true; _}
+          | Iextcall_ind { alloc = true; } | Itailcall_ind _
+          | Itailcall_imm _) ->
         walk_instruction i.next
     | Iop _ ->
         insert_destroyed_at_oper intervals i !pos;

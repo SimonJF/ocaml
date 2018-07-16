@@ -50,7 +50,8 @@ type operation =
   | Icall_imm of { func : string; label_after : label; }
   | Itailcall_ind of { label_after : label; }
   | Itailcall_imm of { func : string; label_after : label; }
-  | Iextcall of { func : string; alloc : bool; label_after : label; }
+  | Iextcall_imm of { func : string; alloc : bool; label_after : label; }
+  | Iextcall_ind of { alloc : bool; label_after: label; }
   | Istackoffset of int
   | Iload of Cmm.memory_chunk * Arch.addressing_mode
   | Istore of Cmm.memory_chunk * Arch.addressing_mode * bool
@@ -172,7 +173,8 @@ let spacetime_node_hole_pointer_is_live_before insn =
   | Iop op ->
     begin match op with
     | Icall_ind _ | Icall_imm _ | Itailcall_ind _ | Itailcall_imm _ -> true
-    | Iextcall { alloc; } -> alloc
+    | Iextcall_imm { alloc; } -> alloc
+    | Iextcall_ind { alloc; } -> alloc
     | Ialloc _ ->
       (* Allocations are special: the call to [caml_call_gc] requires some
          instrumentation code immediately prior, but this is not inserted until
@@ -203,7 +205,7 @@ let spacetime_node_hole_pointer_is_live_before insn =
 
 let operation_can_raise op =
   match op with
-  | Icall_ind _ | Icall_imm _ | Iextcall _
+  | Icall_ind _ | Icall_imm _ | Iextcall_ind _ | Iextcall_imm _
   | Iintop (Icheckbound _) | Iintop_imm (Icheckbound _, _)
   | Ialloc _ -> true
   | _ -> false

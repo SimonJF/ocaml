@@ -541,7 +541,7 @@ let emit_instr fallthrough i =
       if Config.spacetime then begin
         record_frame Reg.Set.empty false i.dbg ~label:label_after
       end
-  | Lop(Iextcall { func; alloc; label_after; }) ->
+  | Lop(Iextcall_imm { func; alloc; label_after; }) ->
       add_used_symbol func;
       if alloc then begin
         load_symbol_addr func rax;
@@ -560,6 +560,21 @@ let emit_instr fallthrough i =
         end
       end else begin
         emit_call func;
+        if Config.spacetime then begin
+          record_frame Reg.Set.empty false i.dbg ~label:label_after
+        end
+      end
+  | Lop (Iextcall_ind { alloc; label_after; } ) ->
+      if alloc then begin
+        (* Function address will already be in rax *)
+        emit_call "caml_c_call";
+        record_frame i.live false i.dbg ~label:label_after;
+        if system <> S_win64 then begin
+          load_symbol_addr "caml_young_ptr" r11;
+          I.mov (mem64 QWORD 0 R11) r15
+        end
+      end else begin
+        I.call (arg i 0);
         if Config.spacetime then begin
           record_frame Reg.Set.empty false i.dbg ~label:label_after
         end

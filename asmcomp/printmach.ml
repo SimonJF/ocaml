@@ -127,7 +127,10 @@ let operation op arg ppf res =
   | Icall_imm { func; _ } -> fprintf ppf "call \"%s\" %a" func regs arg
   | Itailcall_ind _ -> fprintf ppf "tailcall %a" regs arg
   | Itailcall_imm { func; } -> fprintf ppf "tailcall \"%s\" %a" func regs arg
-  | Iextcall { func; alloc; _ } ->
+  | Iextcall_ind { alloc; _ } ->
+      fprintf ppf "iextcall %a%s" regs arg
+      (if alloc then "" else " (noalloc)")
+  | Iextcall_imm { func; alloc; _ } ->
       fprintf ppf "extcall \"%s\" %a%s" func regs arg
       (if alloc then "" else " (noalloc)")
   | Istackoffset n ->

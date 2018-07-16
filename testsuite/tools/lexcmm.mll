@@ -45,6 +45,7 @@ let keyword_table =
     "data", DATA;
     "exit", EXIT;
     "extcall", EXTCALL;
+    "iextcall", IEXTCALL;
     "float", FLOAT;
     "float32", FLOAT32;
     "float64", FLOAT64;

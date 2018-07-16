@@ -533,7 +533,7 @@ let emit_instr fallthrough i =
           I.jmp (immsym func)
         end
       end
-  | Lop(Iextcall { func; alloc; label_after; }) ->
+  | Lop(Iextcall_imm { func; alloc; label_after; }) ->
       add_used_symbol func;
       if alloc then begin
         if system <> S_macosx then
@@ -555,6 +555,7 @@ let emit_instr fallthrough i =
           I.call (sym (Printf.sprintf "L%s$stub" (emit_symbol func)))
         end
       end
+  | Lop (Iextcall_ind _) -> failwith "unimplemented"
   | Lop(Istackoffset n) ->
       if n < 0
       then I.add (int (-n)) esp

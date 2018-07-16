@@ -311,10 +311,14 @@ class virtual instruction_selection = object (self)
         assert (Array.length arg = 1);
         self#instrument_indirect_call ~env ~callee:arg.(0)
           ~is_tail:true ~label_after
-      | M.Iop (M.Iextcall { func; alloc = true; label_after; }) ->
+      | M.Iop (M.Iextcall_imm { func; alloc = true; label_after; }) ->
         (* N.B. No need to instrument "noalloc" external calls. *)
         assert (Array.length arg = 0);
         self#instrument_direct_call ~env ~func ~is_tail:false ~label_after
+      | M.Iop (M.Iextcall_ind { alloc = true; label_after; }) ->
+        assert (Array.length arg = 0);
+        self#instrument_indirect_call ~env ~callee:arg.(0)
+          ~is_tail:false ~label_after
       | _ -> None
 
   method private instrument_blockheader ~env ~value's_header ~dbg =

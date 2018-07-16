@@ -89,6 +89,7 @@ let access_array base numelt size =
 %token GTI
 %token HALF
 %token <string> IDENT
+%token IEXTCALL
 %token IF
 %token INT
 %token INT32
@@ -207,6 +208,9 @@ expr:
                 { Cop(Capply $6, $4 :: List.rev $5, debuginfo ?loc:$3 ()) }
   | LPAREN EXTCALL STRING exprlist machtype RPAREN
                {Cop(Cextcall($3, $5, false, None), List.rev $4, debuginfo ())}
+  | LPAREN IEXTCALL exprlist machtype RPAREN
+               {Cop(Cextcall_indirect($4, false, None),
+                  List.rev $4, debuginfo ()) }
   | LPAREN ALLOC exprlist RPAREN { Cop(Calloc, List.rev $3, debuginfo ()) }
   | LPAREN SUBF expr RPAREN { Cop(Cnegf, [$3], debuginfo ()) }
   | LPAREN SUBF expr expr RPAREN { Cop(Csubf, [$3; $4], debuginfo ()) }

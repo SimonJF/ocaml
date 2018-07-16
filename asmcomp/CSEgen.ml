@@ -223,7 +223,7 @@ method class_of_operation op =
   | Imove | Ispill | Ireload -> assert false   (* treated specially *)
   | Iconst_int _ | Iconst_float _ | Iconst_symbol _ -> Op_pure
   | Icall_ind _ | Icall_imm _ | Itailcall_ind _ | Itailcall_imm _
-  | Iextcall _ -> assert false                 (* treated specially *)
+  | Iextcall_ind _ | Iextcall_imm _ -> assert false   (* treated specially *)
   | Istackoffset _ -> Op_other
   | Iload(_,_) -> Op_load
   | Istore(_,_,asg) -> Op_store asg
@@ -263,7 +263,7 @@ method private cse n i =
          as to the argument reg. *)
       let n1 = set_move n i.arg.(0) i.res.(0) in
       {i with next = self#cse n1 i.next}
-  | Iop (Icall_ind _ | Icall_imm _ | Iextcall _) ->
+  | Iop (Icall_ind _ | Icall_imm _ | Iextcall_ind _ | Iextcall_imm _) ->
       (* For function calls, we should at least forget:
          - equations involving memory loads, since the callee can
            perform arbitrary memory stores;

@@ -87,9 +87,9 @@ method private reload i =
       let newarg = self#makereg1 i.arg in
       insert_moves i.arg newarg
         {i with arg = newarg}
-  | Iop(Icall_imm _ | Iextcall _) ->
+  | Iop(Icall_imm _ | Iextcall_imm _) ->
       {i with next = self#reload i.next}
-  | Iop(Icall_ind _) ->
+  | Iop(Icall_ind _) | Iop(Iextcall_ind _) ->
       let newarg = self#makereg1 i.arg in
       insert_moves i.arg newarg
         {i with arg = newarg; next = self#reload i.next}
