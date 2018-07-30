@@ -32,15 +32,15 @@ open Mach
      Itailcall_ind                      R
      Iload                      R       R       R
      Istore                             R       R
-     Iintop(Icomp)              R       S       R
-     Iintop(Imul|Idiv|Imod)     R       R       S
+     Iintop(Imul|Icomp)         R       S       R
+     Iintop(Idiv|Imod)          R       R       S
      Iintop(Imulh)              R       R       S
      Iintop(shift)              S       S       R
      Iintop(others)             R       R       S
                             or  S       S       R
      Iintop_imm(Iadd, n)/lea    R       R
      Iintop_imm(others)         S       S
-     Inegf...Idivf              R       R       S
+     Inegf...Idivf              R       S       R
      Ifloatofint                R       S
      Iintoffloat                R       S
      If32off64                  R       S
